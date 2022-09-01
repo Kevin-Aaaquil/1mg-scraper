@@ -35,7 +35,7 @@ const fetchSaltMedicines = async (salts) => {
 try {
     const saltMedicines = []
     let id = 1
-    for(let i=0;i<2;i++){
+    for(let i=0;i<salts.length;i++){
         const salt  = salts[i];
         const url = salt.saltUrl;
         console.log("Fetching page " + url);
