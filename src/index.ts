@@ -35,7 +35,7 @@ const fetchSaltMedicines = async (salts) => {
 try {
     const saltMedicines = []
     let id = 1
-    for(let i=0;i<salts.length;i++){
+    for(let i=0;i<2;i++){
         const salt  = salts[i];
         const url = salt.saltUrl;
         console.log("Fetching page " + url);
@@ -47,10 +47,14 @@ try {
             const medicine = {
                 id: id++,
                 saltName: salt.saltName,
-                medicineName : data.find('div.flex.paddingBoth-8').find('div.flexColumn.col-3.SingleAttributeComparison__wrap__Va2gi').find('div.bodySemiBold').find('div').text,
-                manufacturer : data.find('div.flex.paddingBoth-8').find('div.flexColumn.col-3.SingleAttributeComparison__wrap__Va2gi').find('div.smallRegular.SingleAttributeComparison__subtitle__TRmce').text
+                medicineName : data.find('div.bodySemiBold').text(),
+                manufacturer : data.find('div.smallRegular.SingleAttributeComparison__subtitle__TRmce').text(),
+                priceRange: data.find('div.bodyRegular').text(),
+                variants: data.find('div.smallSemiBold').text(),
+                url: "https://www.1mg.com"+data.attr('href'),
             }
             saltMedicines.push(medicine)
+
 
         })
     }
@@ -68,6 +72,7 @@ const data = await fetchListOfSalts();
 const saltMedicines = await fetchSaltMedicines(data);
 const json = JSON.stringify(saltMedicines);
 fs.writeFileSync('saltMedicines.json', json);
+fs.writeFileSync('salts.json', JSON.stringify(data));
 // await fetchSaltMedicines()
 })()
 
