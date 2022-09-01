@@ -1,0 +1,23 @@
+{
+  "name": "1mg-scraper",
+  "version": "1.0.0",
+  "description": "parse 1mg",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "npx tsc-watch --onSuccess \"node build/index.js\""
+  },
+  "author": "kevin",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.0.2",
+    "mongodb": "^4.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.14"
+  }
+}
