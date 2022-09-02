@@ -6,8 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node build/index.js",
-    "dev": "npx tsc-watch --onSuccess \"node build/index.js\""
+    "start-index": "node build/index.js",
+    "start-main": "node build/main.js",
+    "dev": "npx tsc-watch --onSuccess \"node build/main.js\""
   },
   "author": "kevin",
   "license": "ISC",
