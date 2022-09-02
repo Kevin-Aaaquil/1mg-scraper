@@ -33,7 +33,7 @@ const fetchSaltMedicines = async (salts) => {
   try {
     const saltMedicines = [];
     let id = 1;
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < salts.length; i++) {
       const salt = salts[i];
       const url = salt.saltUrl;
       console.log("Fetching page " + url);
@@ -67,7 +67,7 @@ const fetchMedicineVariants = async (saltMedicines) => {
   try {
     const variantMedicines = [];
     let id =0;
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < saltMedicines.length; i++) {
         const saltMedicine = saltMedicines[i];
         const url = saltMedicine.url;
         console.log("Fetching page " + url);
