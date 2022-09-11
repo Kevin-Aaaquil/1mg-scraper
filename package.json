@@ -8,7 +8,8 @@
     "build": "tsc",
     "start-index": "node build/index.js",
     "start-main": "node build/main.js",
-    "dev": "npx tsc-watch --onSuccess \"node build/main.js\""
+    "start-site": "node build/sitemap.js",
+    "dev": "npx tsc-watch --onSuccess \"node build/sitemap.js\""
   },
   "author": "kevin",
   "license": "ISC",
