@@ -97,10 +97,10 @@ const fetchMedicineVariants = async (saltMedicines) => {
 
 (async () => {
   const salts = await fetchListOfSalts();
+  fs.writeFileSync(".dataFiles/salts.json", JSON.stringify(salts));
   const saltMedicines = await fetchSaltMedicines(salts);
+  fs.writeFileSync(".dataFiles/saltMedicines.json", JSON.stringify(saltMedicines));
   const variantMedicines = await fetchMedicineVariants(saltMedicines);
-  fs.writeFileSync("saltMedicines.json", JSON.stringify(saltMedicines));
-  fs.writeFileSync("salts.json", JSON.stringify(salts));
-  fs.writeFileSync("variantMedicines.json", JSON.stringify(variantMedicines));
+  fs.writeFileSync(".dataFiles/variantMedicines.json", JSON.stringify(variantMedicines));
   // await fetchSaltMedicines()
 })();

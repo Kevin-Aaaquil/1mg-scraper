@@ -46,5 +46,5 @@ const fetchMedicines =async() => {
 
 (async ()=>{
     const medicines = await fetchMedicines();
-    fs.writeFileSync('medicines.json',JSON.stringify(medicines))
+    fs.writeFileSync('.dataFiles/medicines.json',JSON.stringify(medicines))
 })()

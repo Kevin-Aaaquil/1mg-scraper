@@ -6,6 +6,7 @@ const fetchXmlLinks = async () => {
   try {
     const links = [];
     const url = "https://www.1mg.com/sitemap.xml";
+    console.log(`Fetching page ${url}...`);
     const response = await axios.get(url);
     const xml = response.data;
     // fs.writeFileSync("sitemap.xml", xml);
@@ -94,7 +95,7 @@ const renderDrugs = async (links: string[], id): Promise<string[]> => {
   const response = await axios.get(url);
   const html = response.data;
   // const $ = cheerio.load(html);
-  fs.writeFileSync("drug.html", html);
+  fs.writeFileSync(".dataFiles/drug.html", html);
   //     const data = {
   //         id: id,
   //     }
@@ -110,7 +111,7 @@ const renderOtc = async (links, id): Promise<string[]> => {
   const response = await axios.get(url);
   const html = response.data;
   // const $ = cheerio.load(html);
-  fs.writeFileSync("drug.html", html);
+  fs.writeFileSync(".dataFiles/otc.html", html);
   //     const data = {
   //         id: id,
   //     }
@@ -126,7 +127,7 @@ const renderGenerics = async (links, id): Promise<string[]> => {
   const response = await axios.get(url);
   const html = response.data;
   // const $ = cheerio.load(html);
-  fs.writeFileSync("drug.html", html);
+  fs.writeFileSync(".dataFiles/generics.html", html);
   //     const data = {
   //         id: id,
   //     }
@@ -137,8 +138,8 @@ const renderGenerics = async (links, id): Promise<string[]> => {
 
 (async () => {
   const xmlLinksJson = await fetchXmlLinks();
-  fs.writeFileSync("xmlLinks.json", JSON.stringify(xmlLinksJson));
+  fs.writeFileSync(".dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
   const allLinks = await getLinksfromXml(xmlLinksJson);
-  fs.writeFileSync("allLinks.json", JSON.stringify(allLinks));
+  fs.writeFileSync(".dataFiles/allLinks.json", JSON.stringify(allLinks));
     await renderData(allLinks);
 })();
