@@ -66,29 +66,33 @@ const fetchSaltMedicines = async (salts) => {
 const fetchMedicineVariants = async (saltMedicines) => {
   try {
     const variantMedicines = [];
-    let id =0;
+    let id = 0;
     for (let i = 0; i < saltMedicines.length; i++) {
-        const saltMedicine = saltMedicines[i];
-        const url = saltMedicine.url;
-        console.log("Fetching page " + url);
-        const response = await axios.get(url);
-        const html = response.data;
-        const $ = cheerio.load(html);
-        $('a.noAnchorColor').each((i, el) => {
-            const data = $(el);
-            const variant = {
-                id: id++,
-                saltName: saltMedicine.saltName,
-                medicineName: saltMedicine.medicineName,
-                manufacturer: saltMedicine.manufacturer,
-                variantName: data.find('div.bodySemiBold.textPrimary.marginTop-4.HorizontalProductTile__header__vAQQE').text(),
-                amount: data.find('div.smallRegular.textSecondary').text(),
-                price: data.find('span.l4Medium').text()
-            }
-            variantMedicines.push(variant);
-        })
-    } 
-    return variantMedicines;  
+      const saltMedicine = saltMedicines[i];
+      const url = saltMedicine.url;
+      console.log("Fetching page " + url);
+      const response = await axios.get(url);
+      const html = response.data;
+      const $ = cheerio.load(html);
+      $("a.noAnchorColor").each((i, el) => {
+        const data = $(el);
+        const variant = {
+          id: id++,
+          saltName: saltMedicine.saltName,
+          medicineName: saltMedicine.medicineName,
+          manufacturer: saltMedicine.manufacturer,
+          variantName: data
+            .find(
+              "div.bodySemiBold.textPrimary.marginTop-4.HorizontalProductTile__header__vAQQE"
+            )
+            .text(),
+          amount: data.find("div.smallRegular.textSecondary").text(),
+          price: data.find("span.l4Medium").text(),
+        };
+        variantMedicines.push(variant);
+      });
+    }
+    return variantMedicines;
   } catch (error) {
     console.log(error);
     throw error;
@@ -97,10 +101,16 @@ const fetchMedicineVariants = async (saltMedicines) => {
 
 (async () => {
   const salts = await fetchListOfSalts();
-  fs.writeFileSync(".dataFiles/salts.json", JSON.stringify(salts));
+  fs.writeFileSync("./dataFiles/salts.json", JSON.stringify(salts));
   const saltMedicines = await fetchSaltMedicines(salts);
-  fs.writeFileSync(".dataFiles/saltMedicines.json", JSON.stringify(saltMedicines));
+  fs.writeFileSync(
+    "./dataFiles/saltMedicines.json",
+    JSON.stringify(saltMedicines)
+  );
   const variantMedicines = await fetchMedicineVariants(saltMedicines);
-  fs.writeFileSync(".dataFiles/variantMedicines.json", JSON.stringify(variantMedicines));
+  fs.writeFileSync(
+    "./dataFiles/variantMedicines.json",
+    JSON.stringify(variantMedicines)
+  );
   // await fetchSaltMedicines()
 })();

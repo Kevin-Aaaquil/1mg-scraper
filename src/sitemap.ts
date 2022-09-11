@@ -77,9 +77,9 @@ const renderData = async (data) => {
     // const medData = [];
     let links = await renderDrugs(data.drugs, 1);
     // medData.push(...links);
-    links = await renderOtc(data.otc, data.drugs.length+1);
+    links = await renderOtc(data.otc, data.drugs.length + 1);
     // medData.push(...links);
-    links = await renderGenerics(data.genrics, data.otc.length+1);
+    links = await renderGenerics(data.genrics, data.otc.length + 1);
     // medData.push(...links);
   } catch (err) {
     console.log(err);
@@ -95,7 +95,7 @@ const renderDrugs = async (links: string[], id): Promise<string[]> => {
   const response = await axios.get(url);
   const html = response.data;
   // const $ = cheerio.load(html);
-  fs.writeFileSync(".dataFiles/drug.html", html);
+  fs.writeFileSync("./dataFiles/drug.html", html);
   //     const data = {
   //         id: id,
   //     }
@@ -111,7 +111,7 @@ const renderOtc = async (links, id): Promise<string[]> => {
   const response = await axios.get(url);
   const html = response.data;
   // const $ = cheerio.load(html);
-  fs.writeFileSync(".dataFiles/otc.html", html);
+  fs.writeFileSync("/dataFiles/otc.html", html);
   //     const data = {
   //         id: id,
   //     }
@@ -127,7 +127,7 @@ const renderGenerics = async (links, id): Promise<string[]> => {
   const response = await axios.get(url);
   const html = response.data;
   // const $ = cheerio.load(html);
-  fs.writeFileSync(".dataFiles/generics.html", html);
+  fs.writeFileSync("./dataFiles/generics.html", html);
   //     const data = {
   //         id: id,
   //     }
@@ -138,8 +138,8 @@ const renderGenerics = async (links, id): Promise<string[]> => {
 
 (async () => {
   const xmlLinksJson = await fetchXmlLinks();
-  fs.writeFileSync(".dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
+  fs.writeFileSync("./dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
   const allLinks = await getLinksfromXml(xmlLinksJson);
-  fs.writeFileSync(".dataFiles/allLinks.json", JSON.stringify(allLinks));
-    await renderData(allLinks);
+  fs.writeFileSync("./dataFiles/allLinks.json", JSON.stringify(allLinks));
+  await renderData(allLinks);
 })();
