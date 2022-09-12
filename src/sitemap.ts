@@ -118,7 +118,13 @@ const renderDrugs = async (links: string[], id) => {
     // const res = [];
     console.log("SCRAPING DRUGS...");
     links = links.slice(0, 100);
-    const tasks = links.map(async (url) => {
+    const tasks = links.map(async (url, i) => {
+      // if (i % 50 == 0) {
+      //   setTimeout(function () {
+      //     console.log("Sleeping for 1 second");
+      //   }, 1000);
+      // }
+      await delay(5)
       const response = await axios.get(url);
       console.log(`Fetching page ${url}...`);
       const html = response.data;
@@ -161,11 +167,11 @@ const renderDrugs = async (links: string[], id) => {
     //       ...final,
     //     };
     //     res.push(data);
-    //     if (id % 500 == 0) {
-    //       setTimeout(function () {
-    //         console.log("Sleeping for 1 second");
-    //       }, 1000);
-    //     }
+    // if (id % 500 == 0) {
+    //   setTimeout(function () {
+    //     console.log("Sleeping for 1 second");
+    //   }, 1000);
+    // }
     //   } catch (error) {
     //     throw error;
     //   }
@@ -182,7 +188,13 @@ const renderOtc = async (links, id) => {
     // const res = [];
     console.log("SCRAPING OTC...");
     links = links.slice(0, 100);
-    const tasks = links.map(async (url) => {
+    const tasks = links.map(async (url, i) => {
+      // if (i % 50 == 0) {
+      //   setTimeout(function () {
+      //     console.log("Sleeping for 1 second");
+      //   }, 5000);
+      // }
+      await delay(5)
       const response = await axios.get(url);
       console.log(`Fetching page ${url}...`);
       const html = response.data;
@@ -273,3 +285,5 @@ const renderGenerics = async (links, id): Promise<string[]> => {
     fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(medData.failed));
   } catch (error) {}
 })();
+
+const delay = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
