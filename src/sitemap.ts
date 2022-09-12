@@ -79,95 +79,163 @@ const renderData = async (data) => {
       otc: [],
       generics: [],
     };
-    let links = await renderDrugs(data.drugs, 1);
-    medData.drugs = links;
-    links = await renderOtc(data.otc, medData.drugs.length + 1);
-    medData.otc = links;
-    // links = await renderGenerics(data.genrics, medData.otc.length + 1);
-    // medData.push(...links);
+    const failed = {
+      drugs: [],
+      otc: [],
+      generics: [],
+    };
+    let body = await renderDrugs(data.drugs, 1);
+    medData.drugs = body.res;
+    failed.drugs = body.failed;
+    body = await renderOtc(data.otc, medData.drugs.length + 1);
+    medData.otc = body.res;
+    failed.otc = body.failed;
+    // body = await renderGenerics(data.genrics, medData.otc.length + 1);
+    // medData.generics = body.res;
+    // failed.generics = body.failed;
     console.log("COMPLETE");
-    return medData;
+    console.log({
+      success: {
+        drugs: medData.drugs.length,
+        otc: medData.otc.length,
+        generics: medData.generics.length,
+      },
+      failed: {
+        drugs: failed.drugs.length,
+        otc: failed.otc.length,
+        generics: failed.generics.length,
+      },
+    });
+    return { medData, failed };
   } catch (err) {
     console.log(err);
     throw err;
   }
 };
 
-const renderDrugs = async (links: string[], id): Promise<string[]> => {
+const renderDrugs = async (links: string[], id) => {
   try {
-    const res = [];
+    // const res = [];
     console.log("SCRAPING DRUGS...");
-    for (let i = 0; i < links.length; i++) {
-      try {
-        //Change to links.length
-        const url = links[i];
-        console.log(`Fetching page ${url}...`);
-        const response = await axios.get(url);
-        const html = response.data;
-        const $ = cheerio.load(html);
-        const jsonData = [];
-        $('script[type="application/ld+json"]').each((i, el) => {
-          const data = $(el);
-          const json = JSON.parse(data.html());
-          jsonData.push(json);
-        });
-        const final = jsonData.find((item) => item.proprietaryName != null);
-        const data = {
-          id: id++,
-          ...final,
-        };
-        res.push(data);
-        if (id % 500 == 0) {
-          setTimeout(function () {
-            console.log("Sleeping for 1 second");
-          }, 1000);
-        }
-      } catch (error) {
-        throw error;
-      }
-    }
-    return res;
+    links = links.slice(0, 100);
+    const tasks = links.map(async (url) => {
+      const response = await axios.get(url);
+      console.log(`Fetching page ${url}...`);
+      const html = response.data;
+      const $ = cheerio.load(html);
+      const jsonData = [];
+      $('script[type="application/ld+json"]').each((i, el) => {
+        const data = $(el);
+        const json = JSON.parse(data.html());
+        jsonData.push(json);
+      });
+      const final = jsonData.find((item) => item.proprietaryName != null);
+      return final;
+    });
+    let res = await Promise.allSettled(tasks);
+    const failed = res.filter((item) => item.status == "rejected");
+    res = res.filter((item) => item.status == "fulfilled");
+    res.forEach((item: any, i) => {
+      res[i] = {
+        id: id++,
+        ...item.value,
+      };
+    });
+    // for (let i = 0; i < links.length; i++) {
+    //   try {
+    //     //Change to links.length
+    //     const url = links[i];
+    //     console.log(`Fetching page ${url}...`);
+    //     const response = await axios.get(url);
+    //     const html = response.data;
+    //     const $ = cheerio.load(html);
+    //     const jsonData = [];
+    //     $('script[type="application/ld+json"]').each((i, el) => {
+    //       const data = $(el);
+    //       const json = JSON.parse(data.html());
+    //       jsonData.push(json);
+    //     });
+    //     const final = jsonData.find((item) => item.proprietaryName != null);
+    //     const data = {
+    //       id: id++,
+    //       ...final,
+    //     };
+    //     res.push(data);
+    //     if (id % 500 == 0) {
+    //       setTimeout(function () {
+    //         console.log("Sleeping for 1 second");
+    //       }, 1000);
+    //     }
+    //   } catch (error) {
+    //     throw error;
+    //   }
+    // }
+    return { res, failed };
   } catch (error) {
     console.log(error);
     throw error;
   }
 };
 
-const renderOtc = async (links, id): Promise<string[]> => {
+const renderOtc = async (links, id) => {
   try {
-    const res = [];
+    // const res = [];
     console.log("SCRAPING OTC...");
-    for (let i = 0; i < links.length; i++) {
-      //Change to links.length
-      try {
-        const url = links[i];
-        console.log(`Fetching page ${url}...`);
-        const response = await axios.get(url);
-        const html = response.data;
-        const $ = cheerio.load(html);
-        const jsonData = [];
-        $('script[type="application/ld+json"]').each((i, el) => {
-          const data = $(el);
-          const json = JSON.parse(data.html());
-          jsonData.push(json);
-        });
-        const final = jsonData.find((item) => item.manufacturer != null);
-        // console.log(final,"Length : "+jsonData.length);
-        const data = {
-          id: id++,
-          ...final,
-        };
-        res.push(data);
-        if (id % 500 == 0) {
-          setTimeout(function () {
-            console.log("Sleeping for 1 second");
-          }, 1000);
-        }
-      } catch (error) {
-        throw error;
-      }
-    }
-    return res;
+    links = links.slice(0, 100);
+    const tasks = links.map(async (url) => {
+      const response = await axios.get(url);
+      console.log(`Fetching page ${url}...`);
+      const html = response.data;
+      const $ = cheerio.load(html);
+      const jsonData = [];
+      $('script[type="application/ld+json"]').each((i, el) => {
+        const data = $(el);
+        const json = JSON.parse(data.html());
+        jsonData.push(json);
+      });
+      const final = jsonData.find((item) => item.manufacturer != null);
+      return final;
+    });
+    let res = await Promise.allSettled(tasks);
+    const failed = res.filter((item) => item.status == "rejected");
+    res = res.filter((item) => item.status == "fulfilled");
+    res.forEach((item: any, i) => {
+      res[i] = {
+        id: id++,
+        ...item.value,
+      };
+    });
+    // for (let i = 0; i < links.length; i++) {
+    //   //Change to links.length
+    //   try {
+    //     const url = links[i];
+    //     console.log(`Fetching page ${url}...`);
+    //     const response = await axios.get(url);
+    //     const html = response.data;
+    //     const $ = cheerio.load(html);
+    //     const jsonData = [];
+    //     $('script[type="application/ld+json"]').each((i, el) => {
+    //       const data = $(el);
+    //       const json = JSON.parse(data.html());
+    //       jsonData.push(json);
+    //     });
+    //     const final = jsonData.find((item) => item.manufacturer != null);
+    //     // console.log(final,"Length : "+jsonData.length);
+    //     const data = {
+    //       id: id++,
+    //       ...final,
+    //     };
+    //     res.push(data);
+    //     if (id % 500 == 0) {
+    //       setTimeout(function () {
+    //         console.log("Sleeping for 1 second");
+    //       }, 1000);
+    //     }
+    //   } catch (error) {
+    //     throw error;
+    //   }
+    // }
+    return { res, failed };
   } catch (err) {
     console.log(err);
     throw err;
@@ -192,10 +260,16 @@ const renderGenerics = async (links, id): Promise<string[]> => {
 };
 
 (async () => {
-  const xmlLinksJson = await fetchXmlLinks();
-  fs.writeFileSync("./dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
-  const allLinks = await getLinksfromXml(xmlLinksJson);
-  fs.writeFileSync("./dataFiles/allLinks.json", JSON.stringify(allLinks));
-  const medData = await renderData(allLinks);
-  fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
+  try {
+    const xmlLinksJson = await fetchXmlLinks();
+    fs.writeFileSync("./dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
+    const allLinks = await getLinksfromXml(xmlLinksJson);
+    fs.writeFileSync("./dataFiles/allLinks.json", JSON.stringify(allLinks));
+    const medData = await renderData(allLinks);
+    fs.writeFileSync(
+      "./dataFiles/medData.json",
+      JSON.stringify(medData.medData)
+    );
+    fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(medData.failed));
+  } catch (error) {}
 })();
