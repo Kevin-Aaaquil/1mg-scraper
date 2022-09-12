@@ -74,13 +74,19 @@ const getLinksfromXml = async (data) => {
 
 const renderData = async (data) => {
   try {
-    // const medData = [];
+    const medData = {
+      drugs: [],
+      otc: [],
+      generics: [],
+    };
     let links = await renderDrugs(data.drugs, 1);
+    medData.drugs = links;
+    links = await renderOtc(data.otc, medData.drugs.length + 1);
+    medData.otc = links;
+    // links = await renderGenerics(data.genrics, medData.otc.length + 1);
     // medData.push(...links);
-    links = await renderOtc(data.otc, data.drugs.length + 1);
-    // medData.push(...links);
-    links = await renderGenerics(data.genrics, data.otc.length + 1);
-    // medData.push(...links);
+    console.log("COMPLETE");
+    return medData;
   } catch (err) {
     console.log(err);
     throw err;
@@ -89,50 +95,71 @@ const renderData = async (data) => {
 
 const renderDrugs = async (links: string[], id): Promise<string[]> => {
   const res = [];
-  // for (let i = 0; i < 10; i++) {                        //Change to links.length
-  const url = links[0];
-  console.log(`Fetching page ${url}...`);
-  const response = await axios.get(url);
-  const html = response.data;
-  // const $ = cheerio.load(html);
-  fs.writeFileSync("./dataFiles/drug.html", html);
-  //     const data = {
-  //         id: id,
-  //     }
-  //     res.push(data)
-  // }
+  console.log("SCRAPING DRUGS...");
+  for (let i = 0; i < 10; i++) {
+    //Change to links.length
+    const url = links[i];
+    console.log(`Fetching page ${url}...`);
+    const response = await axios.get(url);
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const jsonData = [];
+    $('script[type="application/ld+json"]').each((i, el) => {
+      const data = $(el);
+      const json = JSON.parse(data.html());
+      jsonData.push(json);
+    });
+    const final = jsonData.find((item) => item.proprietaryName != null);
+    const data = {
+      id: id++,
+      ...final,
+    };
+    res.push(data);
+  }
   return res;
 };
+
 const renderOtc = async (links, id): Promise<string[]> => {
   const res = [];
-  // for (let i = 0; i < 10; i++) {                        //Change to links.length
-  const url = links[0];
-  console.log(`Fetching page ${url}...`);
-  const response = await axios.get(url);
-  const html = response.data;
-  // const $ = cheerio.load(html);
-  fs.writeFileSync("/dataFiles/otc.html", html);
-  //     const data = {
-  //         id: id,
-  //     }
-  //     res.push(data)
-  // }
+  console.log("SCRAPING OTC...");
+  for (let i = 0; i < 10; i++) {
+    //Change to links.length
+    const url = links[i];
+    console.log(`Fetching page ${url}...`);
+    const response = await axios.get(url);
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const jsonData = [];
+    $('script[type="application/ld+json"]').each((i, el) => {
+      const data = $(el);
+      const json = JSON.parse(data.html());
+      jsonData.push(json);
+    });
+    const final = jsonData.find((item) => item.manufacturer != null);
+    // console.log(final,"Length : "+jsonData.length);
+    const data = {
+      id: id++,
+      ...final,
+    };
+    res.push(data);
+  }
   return res;
 };
+
 const renderGenerics = async (links, id): Promise<string[]> => {
   const res = [];
-  // for (let i = 0; i < 10; i++) {                        //Change to links.length
-  const url = links[0];
-  console.log(`Fetching page ${url}...`);
-  const response = await axios.get(url);
-  const html = response.data;
-  // const $ = cheerio.load(html);
-  fs.writeFileSync("./dataFiles/generics.html", html);
-  //     const data = {
-  //         id: id,
-  //     }
-  //     res.push(data)
-  // }
+  for (let i = 0; i < 10; i++) {
+    //Change to links.length
+    const url = links[i];
+    console.log(`Fetching page ${url}...`);
+    const response = await axios.get(url);
+    const html = response.data;
+    const $ = cheerio.load(html);
+    const data = {
+      id: id,
+    };
+    res.push(data);
+  }
   return res;
 };
 
@@ -141,5 +168,6 @@ const renderGenerics = async (links, id): Promise<string[]> => {
   fs.writeFileSync("./dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
   const allLinks = await getLinksfromXml(xmlLinksJson);
   fs.writeFileSync("./dataFiles/allLinks.json", JSON.stringify(allLinks));
-  await renderData(allLinks);
+  const medData = await renderData(allLinks);
+  fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
 })();
