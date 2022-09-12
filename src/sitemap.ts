@@ -116,6 +116,11 @@ const renderDrugs = async (links: string[], id): Promise<string[]> => {
         ...final,
       };
       res.push(data);
+      if (id % 500 == 0){
+        setTimeout(function() {
+          console.log('Sleeping for 1 second');
+        }, 1000);
+      }
     }
     return res;
   } catch (error) {
@@ -148,6 +153,11 @@ const renderOtc = async (links, id): Promise<string[]> => {
         ...final,
       };
       res.push(data);
+      if (id % 500 == 0){
+        setTimeout(function() {
+          console.log('Sleeping for 1 second');
+        }, 1000);
+      }
     }
     return res;
   } catch (err) {
