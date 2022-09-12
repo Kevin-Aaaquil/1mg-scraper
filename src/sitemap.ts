@@ -87,6 +87,9 @@ const renderData = async (data) => {
     let body = await renderDrugs(data.drugs, 1);
     medData.drugs = body.res;
     failed.drugs = body.failed;
+    setTimeout(async () => {
+      console.log("Waiting for 20 seconds...");
+    }, 20000);
     body = await renderOtc(data.otc, medData.drugs.length + 1);
     medData.otc = body.res;
     failed.otc = body.failed;
@@ -117,14 +120,13 @@ const renderDrugs = async (links: string[], id) => {
   try {
     // const res = [];
     console.log("SCRAPING DRUGS...");
-    links = links.slice(0, 100);
+    // links = links.slice(0, 100);
     const tasks = links.map(async (url, i) => {
       // if (i % 50 == 0) {
       //   setTimeout(function () {
       //     console.log("Sleeping for 1 second");
       //   }, 1000);
       // }
-      await delay(5)
       const response = await axios.get(url);
       console.log(`Fetching page ${url}...`);
       const html = response.data;
@@ -187,14 +189,13 @@ const renderOtc = async (links, id) => {
   try {
     // const res = [];
     console.log("SCRAPING OTC...");
-    links = links.slice(0, 100);
+    // links = links.slice(0, 100);
     const tasks = links.map(async (url, i) => {
       // if (i % 50 == 0) {
       //   setTimeout(function () {
       //     console.log("Sleeping for 1 second");
       //   }, 5000);
       // }
-      await delay(5)
       const response = await axios.get(url);
       console.log(`Fetching page ${url}...`);
       const html = response.data;
@@ -285,5 +286,3 @@ const renderGenerics = async (links, id): Promise<string[]> => {
     fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(medData.failed));
   } catch (error) {}
 })();
-
-const delay = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
