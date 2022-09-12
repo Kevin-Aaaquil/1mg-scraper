@@ -96,7 +96,7 @@ const renderData = async (data) => {
 const renderDrugs = async (links: string[], id): Promise<string[]> => {
   const res = [];
   console.log("SCRAPING DRUGS...");
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < links.length; i++) {
     //Change to links.length
     const url = links[i];
     console.log(`Fetching page ${url}...`);
@@ -122,7 +122,7 @@ const renderDrugs = async (links: string[], id): Promise<string[]> => {
 const renderOtc = async (links, id): Promise<string[]> => {
   const res = [];
   console.log("SCRAPING OTC...");
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < links.length; i++) {
     //Change to links.length
     const url = links[i];
     console.log(`Fetching page ${url}...`);

@@ -2,3 +2,5 @@ node_modules
 build
 *.html
 drugs.json
+allLinks.json
+xmlLinks.json
