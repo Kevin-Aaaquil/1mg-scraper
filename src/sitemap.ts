@@ -98,28 +98,32 @@ const renderDrugs = async (links: string[], id): Promise<string[]> => {
     const res = [];
     console.log("SCRAPING DRUGS...");
     for (let i = 0; i < links.length; i++) {
-      //Change to links.length
-      const url = links[i];
-      console.log(`Fetching page ${url}...`);
-      const response = await axios.get(url);
-      const html = response.data;
-      const $ = cheerio.load(html);
-      const jsonData = [];
-      $('script[type="application/ld+json"]').each((i, el) => {
-        const data = $(el);
-        const json = JSON.parse(data.html());
-        jsonData.push(json);
-      });
-      const final = jsonData.find((item) => item.proprietaryName != null);
-      const data = {
-        id: id++,
-        ...final,
-      };
-      res.push(data);
-      if (id % 500 == 0){
-        setTimeout(function() {
-          console.log('Sleeping for 1 second');
-        }, 1000);
+      try {
+        //Change to links.length
+        const url = links[i];
+        console.log(`Fetching page ${url}...`);
+        const response = await axios.get(url);
+        const html = response.data;
+        const $ = cheerio.load(html);
+        const jsonData = [];
+        $('script[type="application/ld+json"]').each((i, el) => {
+          const data = $(el);
+          const json = JSON.parse(data.html());
+          jsonData.push(json);
+        });
+        const final = jsonData.find((item) => item.proprietaryName != null);
+        const data = {
+          id: id++,
+          ...final,
+        };
+        res.push(data);
+        if (id % 500 == 0) {
+          setTimeout(function () {
+            console.log("Sleeping for 1 second");
+          }, 1000);
+        }
+      } catch (error) {
+        throw error;
       }
     }
     return res;
@@ -135,28 +139,32 @@ const renderOtc = async (links, id): Promise<string[]> => {
     console.log("SCRAPING OTC...");
     for (let i = 0; i < links.length; i++) {
       //Change to links.length
-      const url = links[i];
-      console.log(`Fetching page ${url}...`);
-      const response = await axios.get(url);
-      const html = response.data;
-      const $ = cheerio.load(html);
-      const jsonData = [];
-      $('script[type="application/ld+json"]').each((i, el) => {
-        const data = $(el);
-        const json = JSON.parse(data.html());
-        jsonData.push(json);
-      });
-      const final = jsonData.find((item) => item.manufacturer != null);
-      // console.log(final,"Length : "+jsonData.length);
-      const data = {
-        id: id++,
-        ...final,
-      };
-      res.push(data);
-      if (id % 500 == 0){
-        setTimeout(function() {
-          console.log('Sleeping for 1 second');
-        }, 1000);
+      try {
+        const url = links[i];
+        console.log(`Fetching page ${url}...`);
+        const response = await axios.get(url);
+        const html = response.data;
+        const $ = cheerio.load(html);
+        const jsonData = [];
+        $('script[type="application/ld+json"]').each((i, el) => {
+          const data = $(el);
+          const json = JSON.parse(data.html());
+          jsonData.push(json);
+        });
+        const final = jsonData.find((item) => item.manufacturer != null);
+        // console.log(final,"Length : "+jsonData.length);
+        const data = {
+          id: id++,
+          ...final,
+        };
+        res.push(data);
+        if (id % 500 == 0) {
+          setTimeout(function () {
+            console.log("Sleeping for 1 second");
+          }, 1000);
+        }
+      } catch (error) {
+        throw error;
       }
     }
     return res;
