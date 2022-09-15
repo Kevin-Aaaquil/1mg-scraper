@@ -32,8 +32,8 @@ const FeedDataToMedData = async (success, failed, key) => {
     const medData = JSON.parse(rawData.toString());
     rawData = fs.readFileSync("./dataFiles/failed.json");
     const failedData = JSON.parse(rawData.toString());
-    medData[key] = success;
-    failedData[key] = failed;
+    medData[key].push(...success);
+    failedData[key].push(...failed);
     fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
     fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(failedData));
   }
@@ -111,22 +111,22 @@ const getLinksfromXml = async (data) => {
 
 const renderData = async (data) => {
   try {
-    const medData = {
-      drugs: [],
-      otc: [],
-      generics: [],
+    const success = {
+      drugs: 0,
+      otc: 0,
+      generics: 0,
     };
     const failed = {
-      drugs: [],
-      otc: [],
-      generics: [],
+      drugs: 0,
+      otc: 0,
+      generics: 0,
     };
     let body;
     body = await renderDrugs(data.drugs, 1);
-    medData.drugs = body.success;
-    failed.drugs = body.failed;
-    FeedDataToMedData(body.success, body.failed, "drugs");
-    // body = await renderOtc(data.otc, medData.drugs.length + 1);
+    success.drugs = body.successCount;
+    failed.drugs = body.failedCount;
+    // FeedDataToMedData(body.success, body.failed, "drugs");
+    // body = await renderOtc(data.otc, success.drugs + 1);
     // medData.otc = body.success;
     // failed.otc = body.failed;
     // FeedDataToMedData(body.success, body.failed, "otc");
@@ -136,18 +136,10 @@ const renderData = async (data) => {
     // FeedDataToMedData(body.success, body.failed, "generics");
     console.log("COMPLETE");
     console.log({
-      success: {
-        drugs: medData.drugs.length,
-        otc: medData.otc.length,
-        generics: medData.generics.length,
-      },
-      failed: {
-        drugs: failed.drugs.length,
-        otc: failed.otc.length,
-        generics: failed.generics.length,
-      },
+      success,
+      failed,
     });
-    return { medData, failed };
+    // return { medData, failed };
   } catch (err) {
     console.log(err);
     throw err;
@@ -156,9 +148,11 @@ const renderData = async (data) => {
 
 const renderDrugs = async (links: string[], id) => {
   try {
-    const res = [];
+    // const res = [];
+    let successCount = 0, failedCount = 0;
     console.log("SCRAPING DRUGS...");
-    for (let i = 0; i < links.length; i += 100) {
+    for (let i = 0; i < 600; i += 100) {
+      const res = [];
       const limit = Math.min(i + 100, links.length + 1);
       const arr = links.slice(i, limit);
       console.log("SCRAPING BATCH", i, limit);
@@ -180,16 +174,20 @@ const renderDrugs = async (links: string[], id) => {
         return await Promise.allSettled(tasks);
       });
       res.push(...data);
+      const failed = res.filter((item) => item.status == "rejected");
+      const success = res.filter((item) => item.status == "fulfilled");
+      success.forEach((item: any, i) => {
+        success[i] = {
+          id: id++,
+          ...item.value,
+        };
+      });
+      successCount+=success.length;
+      failedCount+=failed.length;
+      FeedDataToMedData(success, failed, "drugs");
     }
-    const failed = res.filter((item) => item.status == "rejected");
-    const success = res.filter((item) => item.status == "fulfilled");
-    success.forEach((item: any, i) => {
-      success[i] = {
-        id: id++,
-        ...item.value,
-      };
-    });
-    return { success, failed };
+
+    return { successCount, failedCount };
   } catch (error) {
     console.log(error);
     throw error;
