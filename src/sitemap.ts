@@ -1,6 +1,43 @@
 import axios from "axios";
 import cheerio from "cheerio";
 import * as fs from "fs";
+import Bottleneck from "bottleneck";
+
+const limiter = new Bottleneck({
+  maxConcurrent: 10,
+  minTime: 100,
+});
+
+const FeedDataToMedData = async (success, failed, key) => {
+  if (
+    !fs.existsSync("./dataFiles/medData.json") &&
+    !fs.existsSync("./dataFiles/failed.json")
+  ) {
+    const medData = {
+      drugs: [],
+      otc: [],
+      generics: [],
+    };
+    const failedData = {
+      drugs: [],
+      otc: [],
+      generics: [],
+    };
+    medData[key] = success;
+    failedData[key] = failed;
+    fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
+    fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(failedData));
+  } else {
+    let rawData = fs.readFileSync("./dataFiles/medData.json");
+    const medData = JSON.parse(rawData.toString());
+    rawData = fs.readFileSync("./dataFiles/failed.json");
+    const failedData = JSON.parse(rawData.toString());
+    medData[key] = success;
+    failedData[key] = failed;
+    fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
+    fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(failedData));
+  }
+};
 
 const fetchXmlLinks = async () => {
   try {
@@ -85,17 +122,17 @@ const renderData = async (data) => {
       generics: [],
     };
     let body = await renderDrugs(data.drugs, 1);
-    medData.drugs = body.res;
+    medData.drugs = body.success;
     failed.drugs = body.failed;
-    setTimeout(async () => {
-      console.log("Waiting for 20 seconds...");
-    }, 20000);
-    body = await renderOtc(data.otc, medData.drugs.length + 1);
-    medData.otc = body.res;
-    failed.otc = body.failed;
+    FeedDataToMedData(body.success, body.failed, "drugs");
+    // body = await renderOtc(data.otc, medData.drugs.length + 1);
+    // medData.otc = body.success;
+    // failed.otc = body.failed;
+    // FeedDataToMedData(body.success, body.failed, "otc");
     // body = await renderGenerics(data.genrics, medData.otc.length + 1);
-    // medData.generics = body.res;
+    // medData.generics = body.success;
     // failed.generics = body.failed;
+    // FeedDataToMedData(body.success, body.failed, "generics");
     console.log("COMPLETE");
     console.log({
       success: {
@@ -118,67 +155,40 @@ const renderData = async (data) => {
 
 const renderDrugs = async (links: string[], id) => {
   try {
-    // const res = [];
+    const res = [];
     console.log("SCRAPING DRUGS...");
-    // links = links.slice(0, 100);
-    const tasks = links.map(async (url, i) => {
-      // if (i % 50 == 0) {
-      //   setTimeout(function () {
-      //     console.log("Sleeping for 1 second");
-      //   }, 1000);
-      // }
-      const response = await axios.get(url);
-      console.log(`Fetching page ${url}...`);
-      const html = response.data;
-      const $ = cheerio.load(html);
-      const jsonData = [];
-      $('script[type="application/ld+json"]').each((i, el) => {
-        const data = $(el);
-        const json = JSON.parse(data.html());
-        jsonData.push(json);
+    for (let i = 0; i <= 700; i += 100) {
+      const limit = Math.min(i + 100, links.length + 1);
+      const arr = links.slice(i, limit);
+      console.log("SCRAPING BATCH", i, i + 100);
+      const data = await limiter.schedule(async () => {
+        const tasks = arr.map(async (url, i) => {
+          const response = await axios.get(url);
+          console.log(`Fetching page ${url}...`);
+          const html = response.data;
+          const $ = cheerio.load(html);
+          const jsonData = [];
+          $('script[type="application/ld+json"]').each((i, el) => {
+            const data = $(el);
+            const json = JSON.parse(data.html());
+            jsonData.push(json);
+          });
+          const final = jsonData.find((item) => item.proprietaryName != null);
+          return final;
+        });
+        return await Promise.allSettled(tasks);
       });
-      const final = jsonData.find((item) => item.proprietaryName != null);
-      return final;
-    });
-    let res = await Promise.allSettled(tasks);
+      res.push(...data);
+    }
     const failed = res.filter((item) => item.status == "rejected");
-    res = res.filter((item) => item.status == "fulfilled");
-    res.forEach((item: any, i) => {
-      res[i] = {
+    const success = res.filter((item) => item.status == "fulfilled");
+    success.forEach((item: any, i) => {
+      success[i] = {
         id: id++,
         ...item.value,
       };
     });
-    // for (let i = 0; i < links.length; i++) {
-    //   try {
-    //     //Change to links.length
-    //     const url = links[i];
-    //     console.log(`Fetching page ${url}...`);
-    //     const response = await axios.get(url);
-    //     const html = response.data;
-    //     const $ = cheerio.load(html);
-    //     const jsonData = [];
-    //     $('script[type="application/ld+json"]').each((i, el) => {
-    //       const data = $(el);
-    //       const json = JSON.parse(data.html());
-    //       jsonData.push(json);
-    //     });
-    //     const final = jsonData.find((item) => item.proprietaryName != null);
-    //     const data = {
-    //       id: id++,
-    //       ...final,
-    //     };
-    //     res.push(data);
-    // if (id % 500 == 0) {
-    //   setTimeout(function () {
-    //     console.log("Sleeping for 1 second");
-    //   }, 1000);
-    // }
-    //   } catch (error) {
-    //     throw error;
-    //   }
-    // }
-    return { res, failed };
+    return { success, failed };
   } catch (error) {
     console.log(error);
     throw error;
@@ -189,7 +199,7 @@ const renderOtc = async (links, id) => {
   try {
     // const res = [];
     console.log("SCRAPING OTC...");
-    // links = links.slice(0, 100);
+    links = links.slice(0, 50);
     const tasks = links.map(async (url, i) => {
       // if (i % 50 == 0) {
       //   setTimeout(function () {
@@ -274,15 +284,34 @@ const renderGenerics = async (links, id): Promise<string[]> => {
 
 (async () => {
   try {
+    console.log("Starting fresh run...");
+    // Delete all data before fresh run
+    if (fs.existsSync("./dataFiles/xmlLinks.json")) {
+      await fs.unlinkSync("./dataFiles/xmlLinks.json");
+    }
+    if (fs.existsSync("./dataFiles/allLinks.json")) {
+      await fs.unlinkSync("./dataFiles/allLinks.json");
+    }
+    if (fs.existsSync("./dataFiles/medData.json")) {
+      await fs.unlinkSync("./dataFiles/medData.json");
+    }
+    if (fs.existsSync("./dataFiles/failed.json")) {
+      await fs.unlinkSync("./dataFiles/failed.json");
+    }
+    // Get all XML Links
     const xmlLinksJson = await fetchXmlLinks();
     fs.writeFileSync("./dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
+
+    // Get all data links from XML files
     const allLinks = await getLinksfromXml(xmlLinksJson);
     fs.writeFileSync("./dataFiles/allLinks.json", JSON.stringify(allLinks));
-    const medData = await renderData(allLinks);
-    fs.writeFileSync(
-      "./dataFiles/medData.json",
-      JSON.stringify(medData.medData)
-    );
-    fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(medData.failed));
+
+    // Generate all MedData and store it
+    await renderData(allLinks);
+    // fs.writeFileSync(
+    //   "./dataFiles/medData.json",
+    //   JSON.stringify(medData.medData)
+    // );
+    // fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(medData.failed));
   } catch (error) {}
 })();
