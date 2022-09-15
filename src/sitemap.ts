@@ -121,7 +121,8 @@ const renderData = async (data) => {
       otc: [],
       generics: [],
     };
-    let body = await renderDrugs(data.drugs, 1);
+    let body;
+    body = await renderDrugs(data.drugs, 1);
     medData.drugs = body.success;
     failed.drugs = body.failed;
     FeedDataToMedData(body.success, body.failed, "drugs");
@@ -157,10 +158,10 @@ const renderDrugs = async (links: string[], id) => {
   try {
     const res = [];
     console.log("SCRAPING DRUGS...");
-    for (let i = 0; i <= 700; i += 100) {
+    for (let i = 0; i < links.length; i += 100) {
       const limit = Math.min(i + 100, links.length + 1);
       const arr = links.slice(i, limit);
-      console.log("SCRAPING BATCH", i, i + 100);
+      console.log("SCRAPING BATCH", i, limit);
       const data = await limiter.schedule(async () => {
         const tasks = arr.map(async (url, i) => {
           const response = await axios.get(url);
@@ -197,68 +198,40 @@ const renderDrugs = async (links: string[], id) => {
 
 const renderOtc = async (links, id) => {
   try {
-    // const res = [];
+    const res = [];
     console.log("SCRAPING OTC...");
-    links = links.slice(0, 50);
-    const tasks = links.map(async (url, i) => {
-      // if (i % 50 == 0) {
-      //   setTimeout(function () {
-      //     console.log("Sleeping for 1 second");
-      //   }, 5000);
-      // }
-      const response = await axios.get(url);
-      console.log(`Fetching page ${url}...`);
-      const html = response.data;
-      const $ = cheerio.load(html);
-      const jsonData = [];
-      $('script[type="application/ld+json"]').each((i, el) => {
-        const data = $(el);
-        const json = JSON.parse(data.html());
-        jsonData.push(json);
+    for (let i = 0; i < 100; i += 10) {
+      const limit = Math.min(i + 10, links.length + 1);
+      const arr = links.slice(i, limit);
+      console.log("SCRAPING BATCH", i, limit);
+      const data = await limiter.schedule(async () => {
+        const tasks = arr.map(async (url, i) => {
+          const response = await axios.get(url);
+          console.log(`Fetching page ${url}...`);
+          const html = response.data;
+          const $ = cheerio.load(html);
+          const jsonData = [];
+          $('script[type="application/ld+json"]').each((i, el) => {
+            const data = $(el);
+            const json = JSON.parse(data.html());
+            jsonData.push(json);
+          });
+          const final = jsonData.find((item) => item.manufacturer != null);
+          return final;
+        });
+        return await Promise.allSettled(tasks);
       });
-      const final = jsonData.find((item) => item.manufacturer != null);
-      return final;
-    });
-    let res = await Promise.allSettled(tasks);
+      res.push(...data);
+    }
     const failed = res.filter((item) => item.status == "rejected");
-    res = res.filter((item) => item.status == "fulfilled");
-    res.forEach((item: any, i) => {
+    const success = res.filter((item) => item.status == "fulfilled");
+    success.forEach((item: any, i) => {
       res[i] = {
         id: id++,
         ...item.value,
       };
     });
-    // for (let i = 0; i < links.length; i++) {
-    //   //Change to links.length
-    //   try {
-    //     const url = links[i];
-    //     console.log(`Fetching page ${url}...`);
-    //     const response = await axios.get(url);
-    //     const html = response.data;
-    //     const $ = cheerio.load(html);
-    //     const jsonData = [];
-    //     $('script[type="application/ld+json"]').each((i, el) => {
-    //       const data = $(el);
-    //       const json = JSON.parse(data.html());
-    //       jsonData.push(json);
-    //     });
-    //     const final = jsonData.find((item) => item.manufacturer != null);
-    //     // console.log(final,"Length : "+jsonData.length);
-    //     const data = {
-    //       id: id++,
-    //       ...final,
-    //     };
-    //     res.push(data);
-    //     if (id % 500 == 0) {
-    //       setTimeout(function () {
-    //         console.log("Sleeping for 1 second");
-    //       }, 1000);
-    //     }
-    //   } catch (error) {
-    //     throw error;
-    //   }
-    // }
-    return { res, failed };
+    return { success, failed };
   } catch (err) {
     console.log(err);
     throw err;
