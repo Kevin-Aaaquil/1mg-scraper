@@ -189,9 +189,13 @@ const renderDrugs = async (links: string[], id) => {
       // FeedDataToMedData(success, failed, "drugs");
       console.log(success.length, failed.length);
       if (success.length != 0)
-        await (await DB()).collection("drugs-success").insertMany(success);
+        await (await DB())
+          .collection("drugs-success")
+          .insertMany(success, { ordered: false });
       if (failed.length != 0)
-        await (await DB()).collection("drugs-failed").insertMany(failed);
+        await (await DB())
+          .collection("drugs-failed")
+          .insertMany(failed, { ordered: false });
     }
 
     return { successCount, failedCount };
