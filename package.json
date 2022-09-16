@@ -9,6 +9,7 @@
     "start-index": "node build/index.js",
     "start-main": "node build/main.js",
     "start-site": "node build/sitemap.js",
+    "delete": "node build/deleteData.js",
     "dev": "npx tsc-watch --onSuccess \"node build/sitemap.js\""
   },
   "author": "kevin",

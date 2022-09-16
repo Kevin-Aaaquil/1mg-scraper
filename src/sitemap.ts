@@ -3,7 +3,7 @@ import cheerio from "cheerio";
 import * as fs from "fs";
 import Bottleneck from "bottleneck";
 
-import DB from './db';
+import DB from "./db";
 
 const limiter = new Bottleneck({
   maxConcurrent: 10,
@@ -150,7 +150,8 @@ const renderData = async (data) => {
 const renderDrugs = async (links: string[], id) => {
   try {
     // const res = [];
-    let successCount = 0, failedCount = 0;
+    let successCount = 0,
+      failedCount = 0;
     console.log("SCRAPING DRUGS...");
     for (let i = 0; i < links.length; i += 100) {
       const res = [];
@@ -183,12 +184,14 @@ const renderDrugs = async (links: string[], id) => {
           ...item.value,
         };
       });
-      successCount+=success.length;
-      failedCount+=failed.length;
+      successCount += success.length;
+      failedCount += failed.length;
       // FeedDataToMedData(success, failed, "drugs");
       console.log(success.length, failed.length);
-      if (success.length != 0)await (await DB()).collection('drugs-success').insertMany(success);
-      if (failed.length != 0) await (await DB()).collection('drugs-failed').insertMany(failed);
+      if (success.length != 0)
+        await (await DB()).collection("drugs-success").insertMany(success);
+      if (failed.length != 0)
+        await (await DB()).collection("drugs-failed").insertMany(failed);
     }
 
     return { successCount, failedCount };
