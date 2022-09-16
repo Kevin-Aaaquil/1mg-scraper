@@ -152,7 +152,7 @@ const renderDrugs = async (links: string[], id) => {
     // const res = [];
     let successCount = 0, failedCount = 0;
     console.log("SCRAPING DRUGS...");
-    for (let i = 0; i < 500; i += 100) {
+    for (let i = 0; i < links.length; i += 100) {
       const res = [];
       const limit = Math.min(i + 100, links.length + 1);
       const arr = links.slice(i, limit);
@@ -274,6 +274,9 @@ const renderGenerics = async (links, id): Promise<string[]> => {
     //   await fs.unlinkSync("./dataFiles/failed.json");
     // }
     await DB().catch((err) => console.log(err));
+    // const data = await (await DB()).createIndex("drugs-success", { proprietaryName: 1 },{unique:true});
+    // const awa = await (await DB()).createIndex("drugs-failed", { proprietaryName: 1 }, {unique:true});
+
     // Get all XML Links
     const xmlLinksJson = await fetchXmlLinks();
     fs.writeFileSync("./dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
