@@ -151,7 +151,7 @@ const renderDrugs = async (links: string[], id) => {
     // const res = [];
     let successCount = 0, failedCount = 0;
     console.log("SCRAPING DRUGS...");
-    for (let i = 0; i < 600; i += 100) {
+    for (let i = 0; i < links.length; i += 100) {
       const res = [];
       const limit = Math.min(i + 100, links.length + 1);
       const arr = links.slice(i, limit);
