@@ -4,3 +4,4 @@ build
 drugs.json
 allLinks.json
 xmlLinks.json
+.env

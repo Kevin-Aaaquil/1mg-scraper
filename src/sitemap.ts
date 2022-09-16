@@ -3,41 +3,42 @@ import cheerio from "cheerio";
 import * as fs from "fs";
 import Bottleneck from "bottleneck";
 
+import DB from './db';
+
 const limiter = new Bottleneck({
   maxConcurrent: 10,
   minTime: 100,
 });
-
-const FeedDataToMedData = async (success, failed, key) => {
-  if (
-    !fs.existsSync("./dataFiles/medData.json") &&
-    !fs.existsSync("./dataFiles/failed.json")
-  ) {
-    const medData = {
-      drugs: [],
-      otc: [],
-      generics: [],
-    };
-    const failedData = {
-      drugs: [],
-      otc: [],
-      generics: [],
-    };
-    medData[key] = success;
-    failedData[key] = failed;
-    fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
-    fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(failedData));
-  } else {
-    let rawData = fs.readFileSync("./dataFiles/medData.json");
-    const medData = JSON.parse(rawData.toString());
-    rawData = fs.readFileSync("./dataFiles/failed.json");
-    const failedData = JSON.parse(rawData.toString());
-    medData[key].push(...success);
-    failedData[key].push(...failed);
-    fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
-    fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(failedData));
-  }
-};
+// const FeedDataToMedData = async (success, failed, key) => {
+//   if (
+//     !fs.existsSync("./dataFiles/medData.json") &&
+//     !fs.existsSync("./dataFiles/failed.json")
+//   ) {
+//     const medData = {
+//       drugs: [],
+//       otc: [],
+//       generics: [],
+//     };
+//     const failedData = {
+//       drugs: [],
+//       otc: [],
+//       generics: [],
+//     };
+//     medData[key] = success;
+//     failedData[key] = failed;
+//     fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
+//     fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(failedData));
+//   } else {
+//     let rawData = fs.readFileSync("./dataFiles/medData.json");
+//     const medData = JSON.parse(rawData.toString());
+//     rawData = fs.readFileSync("./dataFiles/failed.json");
+//     const failedData = JSON.parse(rawData.toString());
+//     medData[key].push(...success);
+//     failedData[key].push(...failed);
+//     fs.writeFileSync("./dataFiles/medData.json", JSON.stringify(medData));
+//     fs.writeFileSync("./dataFiles/failed.json", JSON.stringify(failedData));
+//   }
+// };
 
 const fetchXmlLinks = async () => {
   try {
@@ -151,7 +152,7 @@ const renderDrugs = async (links: string[], id) => {
     // const res = [];
     let successCount = 0, failedCount = 0;
     console.log("SCRAPING DRUGS...");
-    for (let i = 0; i < links.length; i += 100) {
+    for (let i = 0; i < 500; i += 100) {
       const res = [];
       const limit = Math.min(i + 100, links.length + 1);
       const arr = links.slice(i, limit);
@@ -184,7 +185,10 @@ const renderDrugs = async (links: string[], id) => {
       });
       successCount+=success.length;
       failedCount+=failed.length;
-      FeedDataToMedData(success, failed, "drugs");
+      // FeedDataToMedData(success, failed, "drugs");
+      console.log(success.length, failed.length);
+      if (success.length != 0)await (await DB()).collection('drugs-success').insertMany(success);
+      if (failed.length != 0) await (await DB()).collection('drugs-failed').insertMany(failed);
     }
 
     return { successCount, failedCount };
@@ -263,12 +267,13 @@ const renderGenerics = async (links, id): Promise<string[]> => {
     if (fs.existsSync("./dataFiles/allLinks.json")) {
       await fs.unlinkSync("./dataFiles/allLinks.json");
     }
-    if (fs.existsSync("./dataFiles/medData.json")) {
-      await fs.unlinkSync("./dataFiles/medData.json");
-    }
-    if (fs.existsSync("./dataFiles/failed.json")) {
-      await fs.unlinkSync("./dataFiles/failed.json");
-    }
+    // if (fs.existsSync("./dataFiles/medData.json")) {
+    //   await fs.unlinkSync("./dataFiles/medData.json");
+    // }
+    // if (fs.existsSync("./dataFiles/failed.json")) {
+    //   await fs.unlinkSync("./dataFiles/failed.json");
+    // }
+    await DB().catch((err) => console.log(err));
     // Get all XML Links
     const xmlLinksJson = await fetchXmlLinks();
     fs.writeFileSync("./dataFiles/xmlLinks.json", JSON.stringify(xmlLinksJson));
