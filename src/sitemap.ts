@@ -153,7 +153,7 @@ const renderDrugs = async (links: string[], id) => {
     let successCount = 0,
       failedCount = 0;
     console.log("SCRAPING DRUGS...");
-    for (let i = 0; i < links.length; i += 100) {
+    for (let i = 113992; i < links.length; i += 100) {
       const res = [];
       const limit = Math.min(i + 100, links.length + 1);
       const arr = links.slice(i, limit);
@@ -188,14 +188,29 @@ const renderDrugs = async (links: string[], id) => {
       failedCount += failed.length;
       // FeedDataToMedData(success, failed, "drugs");
       console.log(success.length, failed.length);
-      if (success.length != 0)
-        await (await DB())
-          .collection("drugs-success")
-          .insertMany(success, { ordered: false });
-      if (failed.length != 0)
-        await (await DB())
-          .collection("drugs-failed")
-          .insertMany(failed, { ordered: false });
+      if (success.length != 0) {
+        //   await (await DB())
+        //     .collection("drugs-success")
+        //     .insertMany(success, { ordered: false });
+
+        const toInsert = success.map((item) => ({
+          insertOne: { ...item },
+        }));
+        await (await DB()).collection("drugs-success").bulkWrite(toInsert, {
+          ordered: false,
+        });
+      }
+      if (failed.length != 0) {
+        //   await (await DB())
+        //     .collection("drugs-failed")
+        //     .insertMany(failed, { ordered: false });
+        const toInsert = failed.map((item) => ({
+          insertOne: { ...item },
+        }));
+        await (await DB()).collection("drugs-failed").bulkWrite(toInsert, {
+          ordered: false,
+        });
+      }
     }
 
     return { successCount, failedCount };
