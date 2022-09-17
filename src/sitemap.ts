@@ -153,7 +153,7 @@ const renderDrugs = async (links: string[], id) => {
     let successCount = 0,
       failedCount = 0;
     console.log("SCRAPING DRUGS...");
-    for (let i = 154490; i < links.length; i += 100) {
+    for (let i = 162990; i < links.length; i += 100) {
       const res = [];
       const limit = Math.min(i + 100, links.length + 1);
       const arr = links.slice(i, limit);
@@ -196,7 +196,7 @@ const renderDrugs = async (links: string[], id) => {
         const toInsert = success.map((item) => ({
           insertOne: { ...item },
         }));
-        await (await DB()).collection("drugs-success").bulkWrite(toInsert, {
+        await (await DB()).collection("drugs-success-2").bulkWrite(toInsert, {
           ordered: false,
         });
       }
