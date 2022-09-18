@@ -196,7 +196,7 @@ const renderDrugs = async (links: string[], id) => {
         const toInsert = success.map((item) => ({
           insertOne: { ...item },
         }));
-        await (await DB()).collection("drugs-success-2").bulkWrite(toInsert, {
+        await (await DB()).collection("drugs-success").bulkWrite(toInsert, {
           ordered: false,
         });
       }
