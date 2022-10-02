@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model doctorprofile {
+  doctorId           String    @id
+  education          String
+  specialization     String
+  email              String
+  workPhone          String
+  appointmentService String
+  isVerified         Boolean
+  regNo              String
+  userName           String    @db.Uuid
+  registrationDate   DateTime? @db.Timestamptz(6)
+}
+
+model reportfiles {
+  id        String  @id
+  isDeleted Boolean
+  Key       String  @db.Uuid
+  reportId  String  @db.Uuid
+  FileName  String
+  Mime      String
+}
+
+model reports {
+  id       String @id
+  reportId String @db.Uuid
+}
+
+model timelines {
+  id           String   @id
+  doctorId     String
+  labCode      String
+  bucketKey    String
+  farmakoMeta  String
+  tags         String[]
+  isMigrated   Boolean
+  isDeleted    Boolean
+  userID       String
+  dd           String
+  mm           String
+  yyyy         String
+  updatedByID  String?
+  title        String
+  type         String
+  dataID       String   @db.Uuid
+  timelineID   String   @db.Uuid
+  entityId     String
+  date         BigInt
+  dateUploaded BigInt
+}
+
+model userhospitals {
+  role               String
+  HospitalID         String  @db.Uuid
+  userID             String
+  appointmentService String?
+  commTemplateId     String
+  id                 String  @id
+}
